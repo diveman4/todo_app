@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:3000";
+// backend connection
+const API_URL = "http://localhost:3001";
 
 type Todo = {
   id: number;

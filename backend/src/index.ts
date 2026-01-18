@@ -66,6 +66,6 @@ app.delete('/todos/:id', async (c) => {
 })
 
 // サーバー起動
-const port = 3000
+const port = 3001
 console.log(`Server is running on http://localhost:${port}`)
 serve({ fetch: app.fetch, port })

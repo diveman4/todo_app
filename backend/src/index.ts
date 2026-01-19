@@ -41,11 +41,12 @@ app.put('/todos/:id', async (c) => {
   const id = Number(c.req.param('id'))
   try {
     const body = await c.req.json()
+
     const todo = await prisma.todo.update({
       where: { id },
       data: {
-        title: body.title,
-        completed: body.completed
+        title: body.title !== undefined ? body.title : undefined,
+        completed: body.completed !== undefined ? body.completed :undefined,
       }
     })
     return c.json(todo)

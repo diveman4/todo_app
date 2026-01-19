@@ -8,6 +8,10 @@ export default function TodoPage() {
   const [newTitle, setNewTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  // 編集状態管理
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState(""); 
+
   // 初期データ取得
   useEffect(() => {
     loadTodos();
@@ -17,7 +21,8 @@ export default function TodoPage() {
     try {
       const data = await fetchTodos();
       setTodos(data);
-    } catch (e) {
+    }
+    catch (e) {
       setError("データの取得に失敗しました");
     }
   };
@@ -31,8 +36,28 @@ export default function TodoPage() {
       const addedTodo = await createTodo(newTitle);
       setTodos([addedTodo, ...todos]);
       setNewTitle("");
-    } catch (e) {
+    } 
+    catch (e) {
       alert("作成に失敗しました");
+    }
+  };
+
+  // 編集開始
+  const startEditing = (todo:Todo) => {
+    setEditingId(todo.id);
+    setEditTitle(todo.title);
+  };
+
+  // 編集保存
+  const handleUpdateTitle = async (id:number) => {
+    if (!editTitle.trim()) return;
+    try {
+      const updated = await updateTodo(id, {title: editTitle});
+      setTodos(todos.map((t)=>(t.id === id ? updated :t)));
+      setEditingId(null);
+    } 
+    catch (e) {
+      alert("更新に失敗しました"); 
     }
   };
 
@@ -41,7 +66,8 @@ export default function TodoPage() {
     try {
       const updated = await updateTodo(todo.id, { completed: !todo.completed });
       setTodos(todos.map((t) => (t.id === todo.id ? updated : t)));
-    } catch (e) {
+    }
+    catch (e) {
       alert("更新に失敗しました");
     }
   };
@@ -53,7 +79,8 @@ export default function TodoPage() {
     try {
       await deleteTodo(id);
       setTodos(todos.filter((t) => t.id !== id));
-    } catch (e) {
+    }
+    catch (e) {
       alert("削除に失敗しました");
     }
   };
@@ -90,27 +117,47 @@ export default function TodoPage() {
               key={todo.id}
               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-shadow"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1">
                 <input
                   type="checkbox"
                   checked={todo.completed}
                   onChange={() => handleToggle(todo)}
                   className="w-5 h-5 cursor-pointer"
                 />
-                <span
-                  className={`text-lg ${
+                {editingId === todo.id ? (
+                  // 編集中
+                  <input
+                  type = "text"
+                  className = "flex-1 border border-blue-400 rounded px-2 py-1 text-gray-700 focus:outline-none bg-white"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle(todo.id)}
+                  autoFocus
+                  />
+                ) : (
+                  //通常
+                  <span
+                  className={`text-lg cursor-pointer flex-1 ${
                     todo.completed ? "line-through text-gray-400" : "text-gray-700"
                   }`}
+                  onClick={() => startEditing(todo)}
                 >
                   {todo.title}
-                </span>
+                  </span>
+                )
+                }
               </div>
-              <button
-                onClick={() => handleDelete(todo.id)}
-                className="text-red-500 hover:text-white hover:bg-red-500 border border-red-500 rounded px-3 py-1 text-sm transition-all"
-              >
-                削除
-              </button>
+
+              <div className="flex gap-2 ml-4">
+                {editingId === todo.id ? (
+                  <button onClick={() => handleUpdateTitle(todo.id)} className="text-blue-500 text-sm font-bold">保存</button>
+                ) : (
+                  <>
+                  <button onClick={() => startEditing(todo)} className="text-gray-500 hover:text-blue-500 text-sm">編集</button>
+                  <button onClick={() => handleDelete(todo.id)} className="text-red-500 hover:text-white hover:bg-red-500 border border-red-500 rounded px-3 py-1 text-sm">削除</button>
+                  </>
+                )}
+              </div>
             </li>
           ))}
           {todos.length === 0 && (

@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Priority } from '@prisma/client'
 import { serve } from '@hono/node-server'
 
 const app = new Hono()
@@ -28,7 +28,13 @@ app.post('/todos', async (c) => {
       return c.json({ error: 'Title is required', details: 'The request body must include a title.' }, 400)
     }
     const todo = await prisma.todo.create({
-      data: { title: body.title }
+      data: { 
+        title: body.title,
+        description: body.description || null,
+        //日付文字列をDataオブジェクトへ変換
+        dueDate: body.dueDate ? new Date(body.dueDate) : null,
+        priority: (body.priority as Priority) || Priority.medium
+       }
     })
     return c.json(todo, 201)
   } catch (error) {
@@ -47,6 +53,9 @@ app.put('/todos/:id', async (c) => {
       data: {
         title: body.title !== undefined ? body.title : undefined,
         completed: body.completed !== undefined ? body.completed :undefined,
+        description: body.description !== undefined ? body.description : undefined,
+        dueDate: body.dueDate !== undefined ? (body.dueDate ? new Date(body.dueDate) : null) : undefined,
+        priority: body.priority !== undefined ? (body.priority as Priority) : undefined
       }
     })
     return c.json(todo)

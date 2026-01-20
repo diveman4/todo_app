@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchTodos, createTodo, updateTodo, deleteTodo, Todo } from "@/lib/api";
+import {fetchTodos, createTodo, updateTodo, deleteTodo, Todo, Priority} from "@/lib/api";
 import TodoForm from "@/components/TodoForm";
 import TodoList from "@/components/TodoList";
 
@@ -9,9 +9,12 @@ import TodoList from "@/components/TodoList";
 export default function TodoPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newDueDate, setNewDueDate] = useState("");
+  const [newPriority, setNewPriority] = useState<Priority>("MEDIUM");
   const [error, setError] = useState<string | null>(null);
 
-  // 編集状態管理
+  // 編集状態管理用
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
 
@@ -38,9 +41,17 @@ export default function TodoPage() {
     if (!newTitle.trim()) return;
 
     try {
-      const addedTodo = await createTodo(newTitle);
+      const addedTodo = await createTodo({
+        title: newTitle,
+        description: newDescription || undefined,
+        dueDate: newDueDate || undefined,
+        priority: newPriority,
+      });
       setTodos([addedTodo, ...todos]);
       setNewTitle("");
+      setNewDescription("");
+      setNewDueDate("");
+      setNewPriority("MEDIUM");
     } catch {
       alert("作成に失敗しました");
     }
@@ -96,6 +107,12 @@ export default function TodoPage() {
         <TodoForm
           newTitle={newTitle}
           setNewTitle={setNewTitle}
+          newDescription={newDescription}
+          setNewDescription={setNewDescription}
+          newDueDate={newDueDate}
+          setNewDueDate={setNewDueDate}
+          newPriority={newPriority}
+          setNewPriority={setNewPriority}
           onAddTodo={handleAddTodo}
         />
 

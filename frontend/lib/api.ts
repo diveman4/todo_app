@@ -25,9 +25,10 @@ type UpdateTodoInput = Partial<CreateTodoInput> & {
   completed?: boolean;
 };
 
-// 全取得
-const fetchTodos = async (): Promise<Todo[]> => {
-  const res = await fetch(`${API_URL}/todos`);
+// 全取得（キーワード検索対応）
+const fetchTodos = async (keyword?: string): Promise<Todo[]> => {
+  const query = keyword ? `?keyword=${encodeURIComponent(keyword)}` : "";
+  const res = await fetch(`${API_URL}/todos${query}`);
   if (!res.ok) throw new Error("取得に失敗しました");
   return res.json();
 };

@@ -4,10 +4,14 @@ import { useEffect, useState } from "react";
 import {fetchTodos, createTodo, updateTodo, deleteTodo, Todo, Priority} from "@/lib/api";
 import TodoForm from "@/components/TodoForm";
 import TodoList from "@/components/TodoList";
+import TodoSearch from "@/components/TodoSearch";
+import MaterialDrawer from "@/components/Drawer";
+import MaterialMode from "@/components/MaterialMode";
 
 
 export default function TodoPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
@@ -19,9 +23,9 @@ export default function TodoPage() {
   const [editTitle, setEditTitle] = useState("");
 
   // 初期データ取得関数
-  const loadTodos = async () => {
+  const loadTodos = async (keyword?: string) => {
     try {
-      const data = await fetchTodos();
+      const data = await fetchTodos(keyword);
       setTodos(data);
     } catch {
       setError("データの取得に失敗しました");
@@ -54,6 +58,16 @@ export default function TodoPage() {
       setNewPriority("MEDIUM");
     } catch {
       alert("作成に失敗しました");
+    }
+  };
+
+  // キーワード検索
+  const handleSearch = async () => {
+    try {
+      const data = await fetchTodos(searchKeyword.trim() || undefined);
+      setTodos(data);
+    } catch {
+      setError("検索に失敗しました");
     }
   };
 
@@ -100,6 +114,7 @@ export default function TodoPage() {
   return (
     <main className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
+       <MaterialDrawer />
         <h1 className="text-2xl font-bold text-gray-800 mb-8 text-center">
           TODO リスト
         </h1>
@@ -117,6 +132,12 @@ export default function TodoPage() {
         />
 
         {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+
+        <TodoSearch
+          keyword={searchKeyword}
+          onChangeKeyword={setSearchKeyword}
+          onSearch={handleSearch}
+        />
 
         <TodoList
           todos={todos}

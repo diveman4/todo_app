@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## フロントエンド TODO アプリ
 
-## Getting Started
+### アプリ概要
 
-First, run the development server:
+このアプリは、**シンプルなTODO管理アプリ（タスク管理アプリ）**です。  
+ブラウザ上で次のようなことができます。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **タスクの追加**：タイトル・説明文・期限日・優先度（高/中/低）を入力して登録
+- **タスクの一覧表示**：登録したTODOをカード形式で一覧表示
+- **完了・未完了の切り替え**：チェックボックスで完了状態をワンクリックで変更
+- **タイトルの編集**：一覧からそのままタイトルを編集・保存
+- **削除**：本当に削除してよいか確認ダイアログを出してから削除
+- **検索**：タイトル・説明文に含まれるキーワードで絞り込み検索
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+見た目はできるだけシンプルに、日本語のラベルで直感的に操作できるようにしています。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 使用技術・ライブラリ一覧とその選定理由
 
-## Learn More
+- **Next.js 16**
+  - Reactベースのフレームワークとしてデファクトスタンダードである点。また、CSR / SSR / SSG がページごとに設定できるなどプロダクト向けである為選定。
 
-To learn more about Next.js, take a look at the following resources:
+- **React 19**
+  - Next.jsを使用してる点。コンポーネントという小さな部品の組み合わせでUIを作れ、UIへの反映がリアルタイムで開発がしやすい為選定。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **TypeScript 5**
+  - JavaScriptに「型」を付けられる言語であるため、大規模システムやチーム開発向けであり身につけたい技術の１つであった為選定。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Tailwind CSS 4**
+  - デザイン用のクラスをHTMLに直接書くスタイルなので、コンポーネント単位で素早くUIを組み立てられるので選定。
 
-## Deploy on Vercel
+- **MUI（@mui/material, @mui/icons-material, @emotion/react, @emotion/styled）**
+  - GoogleのMaterial Designガイドラインに沿ったUIコンポーネントセット。ハンバーガーメニューのドロワーやライト/ダークモード切替など、アイコンが豊富であることに魅力を感じ使用してみた。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **バックエンド（参考）**
+  - バックエンドはHono + Prisma + PostgreSQLで実装されており、`http://localhost:3001/todos` に対してREST APIで通信。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+### 環境構築手順
+
+#### フロントエンドのセットアップ
+
+Backend側のREADMEを参照し構築
+Frontend側は手動で打つコマンドは得になし
+
+---
+
+### 工夫した点・アピールポイント
+
+- **TODOを「ちゃんと使えるレベル」で作り込み**
+  - タイトルだけでなく、説明・期限日・優先度まで登録できるようにし、実際のタスク管理でも困らない情報量にした。優先度は「高・中・低」を色付きバッジで表示し、ひと目で重要度が分かるUIにした。
+
+- **検索機能とバックエンド連携**
+  - タイトル・説明文に対するキーワード検索に対応しており、大量のTODOから必要なものをすぐに探せるようにした。
+
+- **型定義を中心にした安全なAPI呼び出し**
+  - `Todo` や `CreateTodoInput` / `UpdateTodoInput` を`lib/api.ts`で定義しており、「どんなデータを渡して・もらうのか」が明確にした。
+
+- **MUI + TailwindによるUI拡張のベース**
+  - `Drawer.tsx` ではMUIのドロワーメニューを使い、今後ライト/ダークモード切替などのメニューを追加しやすい形にしています。`MaterialMode.tsx` ではMUIのテーマ切り替えのサンプルを用意したが、既存のTailwindでコンポーネントの背景などを定義してしまっていたためうまく切り替わらなかった。時間がある時に改善予定。
+
+- **追いやすいコード構成**
+  - `TodoForm`, `TodoList`, `TodoSearch` など、機能ごとにコンポーネントを分割し、どこを読めば何が分かるかがはっきりしています。

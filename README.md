@@ -1,4 +1,6 @@
 #初期環境構築
+##構築手順
+cd todo_app
 docker compose up -d
 docker compose exec backend sh
 npx prisma db push

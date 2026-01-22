@@ -109,9 +109,7 @@ jobs:
   frontend-e2e:
     name: Frontend E2E Tests
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
+    timeout-minutes: 30  # E2Eテストは時間がかかるためタイムアウトを設定
     
     steps:
       - name: Checkout code
@@ -125,12 +123,64 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       
       - name: Install dependencies
+        working-directory: ./frontend
         run: npm ci
       
       - name: Install Playwright browsers
+        working-directory: ./frontend
         run: npx playwright install --with-deps
       
+      - name: Start services with Docker Compose
+        run: |
+          echo "Building and starting Docker Compose services..."
+          docker compose up -d --build
+          # サービスが起動するまで待機
+          echo "Waiting for services to start..."
+          sleep 20
+          # サービスの状態を確認
+          echo "Checking service status..."
+          docker compose ps
+          # ログを確認（エラーの早期発見のため）
+          echo "Backend logs:"
+          docker compose logs backend | tail -20 || true
+          echo "Frontend logs:"
+          docker compose logs frontend | tail -20 || true
+          # ヘルスチェック: バックエンドが応答するまで待機
+          echo "Checking backend health..."
+          for i in {1..40}; do
+            if curl -f http://localhost:3001/todos > /dev/null 2>&1; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Waiting for backend... ($i/40)"
+            sleep 3
+          done
+          # フロントエンドが応答するまで待機
+          echo "Checking frontend health..."
+          for i in {1..40}; do
+            if curl -f http://localhost:3000 > /dev/null 2>&1; then
+              echo "Frontend is ready!"
+              break
+            fi
+            echo "Waiting for frontend... ($i/40)"
+            sleep 3
+          done
+          # 最終確認
+          echo "Final service status:"
+          docker compose ps
+      
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations..."
+          docker compose exec -T backend npx prisma migrate deploy || docker compose exec -T backend npx prisma db push || true
+          echo "Migrations completed"
+      
       - name: Run Playwright tests
+        working-directory: ./frontend
+        env:
+          CI: true
+          BACKEND_URL: http://localhost:3001
+          NEXT_PUBLIC_BACKEND_URL: http://localhost:3001
         run: npm run test:e2e
       
       - name: Upload test results
@@ -140,4 +190,8 @@ jobs:
           name: playwright-report
           path: frontend/test-results/
           retention-days: 30
+      
+      - name: Stop services
+        if: always()
+        run: docker compose down -v
 

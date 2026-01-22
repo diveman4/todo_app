@@ -5,8 +5,20 @@ RUN apt-get update -y && apt-get install -y openssl
 
 WORKDIR /app
 
+# HTTPレジストリを使用（80ポートが開いている場合）
+# 注意: セキュリティ上の理由から、可能であればHTTPS（443ポート）の使用を推奨
+RUN npm config set registry http://registry.npmjs.org/ || \
+    npm config set registry https://registry.npmjs.org/
+
 COPY package*.json ./
-RUN npm install
+# npm installを実行し、失敗した場合はエラーを表示
+RUN npm install --verbose || (echo "npm install failed! Check network connectivity (ports 80 or 443)." && exit 1)
+
+# node_modulesが正しくインストールされたか確認
+RUN if [ ! -d "node_modules" ] || [ -z "$(ls -A node_modules)" ]; then \
+        echo "ERROR: node_modules is empty or missing!" && \
+        exit 1; \
+    fi
 
 COPY . .
 RUN npx prisma generate

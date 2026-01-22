@@ -8,7 +8,13 @@ const app = new Hono()
 const prisma = new PrismaClient()
 
 // CORS設定 別ドメインからのリクエストを許可
-app.use('/*', cors())
+// 環境変数 ALLOWED_ORIGINS が設定されている場合はそのオリジンのみ許可
+// 未設定の場合は全てのオリジンを許可（開発環境用）
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['*']
+app.use('/*', cors({
+  origin: allowedOrigins.includes('*') ? '*' : allowedOrigins,
+  credentials: true,
+}))
 
 // OpenAPI (Swagger) JSON
 app.get('/docs/openapi.json', (c) => {

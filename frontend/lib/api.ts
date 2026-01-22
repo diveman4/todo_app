@@ -1,5 +1,6 @@
 // backend connection
-const API_URL = "http://localhost:3001";
+// Next.jsのrewritesで /api/* がバックエンドコンテナに転送されるため、相対パスを使用
+const API_URL = "/api";
 
 export type Priority = "HIGH" | "MEDIUM" | "LOW";
 

@@ -1,5 +1,7 @@
 import {useState, ElementType} from "react";
-import {DarkMode, LightMode, Menu} from "@mui/icons-material";
+import DarkMode from "@mui/icons-material/DarkMode";
+import LightMode from "@mui/icons-material/LightMode";
+import Menu from "@mui/icons-material/Menu";
 import {Button, List, ListItemButton, ListItemIcon, ListItem, Drawer, Box } from "@mui/material";
 
 type MenuItem = {

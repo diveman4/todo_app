@@ -8,9 +8,13 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:3000",
   },
-  webServer: {
-    command: "npm run dev",
-    port: 3000,
-    reuseExistingServer: true,
-  },
+  // CI環境ではDocker Composeでサーバーを起動するため、webServerは無効化
+  // ローカル環境では自動的にサーバーを起動
+  webServer: process.env.CI
+    ? undefined
+    : {
+        command: "npm run dev",
+        port: 3000,
+        reuseExistingServer: true,
+      },
 });

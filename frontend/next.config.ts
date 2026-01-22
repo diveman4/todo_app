@@ -1,12 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // コンテナ間通信のため、/api/* へのリクエストをバックエンドコンテナに転送
+  // バックエンドAPIへのリクエストを転送
+  // 環境変数 BACKEND_URL または NEXT_PUBLIC_BACKEND_URL を優先
+  // 開発環境（Docker）では 'http://backend:3001' を使用
   async rewrites() {
+    const backendUrl = 
+      process.env.BACKEND_URL || 
+      process.env.NEXT_PUBLIC_BACKEND_URL || 
+      'http://backend:3001';
+    
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.BACKEND_URL || 'http://backend:3001'}/:path*`,
+        destination: `${backendUrl}/:path*`,
       },
     ];
   },

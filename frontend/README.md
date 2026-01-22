@@ -11,7 +11,7 @@
 - **タイトルの編集**：一覧からそのままタイトルを編集・保存
 - **削除**：本当に削除してよいか確認ダイアログを出してから削除
 - **検索**：タイトル・説明文に含まれるキーワードで絞り込み検索
-
+- **キーワード検索**：タイトル・説明文に含まれるキーワードで絞り込み検索（大文字小文字を区別しない）
 見た目はできるだけシンプルに、日本語のラベルで直感的に操作できるようにしています。
 
 ---
@@ -34,7 +34,8 @@
   - GoogleのMaterial Designガイドラインに沿ったUIコンポーネントセット。ハンバーガーメニューのドロワーやライト/ダークモード切替など、アイコンが豊富であることに魅力を感じ使用してみた。
 
 - **バックエンド（参考）**
-  - バックエンドはHono + Prisma + PostgreSQLで実装されており、`http://localhost:3001/todos` に対してREST APIで通信。
+  - バックエンドはHono + Prisma + PostgreSQLで実装されており、REST APIで通信。
+  - Next.jsの`rewrites`機能を使用して、`/api/*`へのリクエストをバックエンドサーバー（`http://backend:3001`）に自動転送。これにより、CORSの問題を回避し、開発環境と本番環境で同じAPIパスを使用可能。
 
 ---
 
@@ -42,8 +43,30 @@
 
 #### フロントエンドのセットアップ
 
-Backend側のREADMEを参照し構築
-Frontend側は手動で打つコマンドは得になし
+プロジェクトルートの[README.md](../README.md)を参照してください。
+
+フロントエンドはDocker Composeで自動的に起動するため、手動で実行するコマンドは特にありません。
+
+### コンポーネント構成
+
+- **`app/page.tsx`**: メインページコンポーネント。状態管理とAPI呼び出しを担当
+- **`components/TodoForm.tsx`**: 新規TODO作成フォーム（タイトル、説明、期限日、優先度）
+- **`components/TodoList.tsx`**: TODO一覧表示コンポーネント（編集、削除、完了切り替え機能を含む）
+- **`components/TodoSearch.tsx`**: キーワード検索コンポーネント
+- **`components/Drawer.tsx`**: MUIのドロワーメニューコンポーネント
+- **`components/MaterialMode.tsx`**: MUIテーマ切り替えコンポーネント（サンプル実装）
+- **`lib/api.ts`**: APIクライアント関数と型定義（`Todo`, `CreateTodoInput`, `UpdateTodoInput`, `Priority`）
+
+### APIクライアント
+
+`lib/api.ts`で以下の関数を提供：
+
+- `fetchTodos(keyword?: string)`: TODO一覧取得（キーワード検索対応）
+- `createTodo(input: CreateTodoInput)`: 新規TODO作成
+- `updateTodo(id: number, data: UpdateTodoInput)`: TODO更新（部分更新対応）
+- `deleteTodo(id: number)`: TODO削除
+
+すべての関数は型安全で、TypeScriptの型チェックにより実行時エラーを防止。
 
 ---
 
@@ -62,4 +85,49 @@ Frontend側は手動で打つコマンドは得になし
   - `Drawer.tsx` ではMUIのドロワーメニューを使い、今後ライト/ダークモード切替などのメニューを追加しやすい形にしています。`MaterialMode.tsx` ではMUIのテーマ切り替えのサンプルを用意したが、既存のTailwindでコンポーネントの背景などを定義してしまっていたためうまく切り替わらなかった。時間がある時に改善予定。
 
 - **追いやすいコード構成**
-  - `TodoForm`, `TodoList`, `TodoSearch` など、機能ごとにコンポーネントを分割し、どこを読めば何が分かるかがはっきりしています。
+  - `TodoForm`, `TodoList`, `TodoSearch`, `Drawer`, `MaterialMode` など、機能ごとにコンポーネントを分割し、どこを読めば何が分かるかがはっきりしています。
+
+- **Next.js rewritesによるAPIプロキシ**
+  - `next.config.ts`で`/api/*`へのリクエストをバックエンドに自動転送。環境変数`BACKEND_URL`または`NEXT_PUBLIC_BACKEND_URL`で転送先を設定可能。デフォルトではDocker環境の`http://backend:3001`を使用。local以外で動かす時に、コンテナ間通信にならなかったため導入。
+
+- **インライン編集機能**
+  - タイトルをクリックするだけで編集モードに切り替わり、Enterキーまたは保存ボタンで保存。直感的な操作を導入。
+
+
+## オプション課題の導入状況（導入したものを◯で記載）
+### 1. 認証機能
+- ユーザー登録・ログイン・ログアウト機能
+- セッション管理
+- 認証方法は自由（Firebase Auth、Auth0、自前実装等）
+
+### 2. TODOの詳細機能
+- ◯期限日の設定（DatePicker実装）
+- ◯優先度の設定（高・中・低など）
+- ◯メモ・説明文の追加
+- カテゴリ・タグ機能
+
+### 3. フィルタリング・ソート・検索機能
+- 完了/未完了でのフィルタリング
+- 期限日や優先度でのソート
+- ◯キーワード検索
+
+### 4. UI/UX向上
+- ダークモード対応
+- ドラッグ&ドロップでの並び替え
+- アニメーション・トランジション
+- キーボードショートカット
+- アクセシビリティ対応（WAI-ARIA）
+
+### 5. その他
+- PWA対応（オフライン動作、ホーム画面追加）
+- 多言語対応（i18n）
+- パフォーマンス最適化（Lighthouse スコア向上）
+- ◯CI/CD パイプライン構築（GitHub Actions等）
+
+### 6. テストコード
+- ◯ユニットテスト（Jest、Vitest等）
+- ◯E2Eテスト（Playwright、Cypress等）
+
+### 7. デモサイト
+- ◯Vercel、Netlify、GitHub Pages等でデプロイしたURL
+- ◯デプロイが難しい場合はスクリーンショットでも可
